@@ -78,5 +78,31 @@ function attachListeners() {
             return;
         };
 
+        createAccount(formData);
+
     });
+};
+
+async function createAccount(formData) {
+    try {
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        });
+        const responseJSON = await response.json();
+
+        if (!response.ok) {
+            alert(responseJSON.message);
+        } else {
+            alert('Authentication successful!');
+            localStorage.setItem('token', responseJSON.token);
+            localStorage.setItem('username', responseJSON.username);
+
+            window.location.href = '/';
+        };
+
+    } catch (error) {
+        alert('Authentication failed, please try again.');
+    };
 };
