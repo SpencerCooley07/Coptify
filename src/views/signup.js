@@ -5,7 +5,7 @@ export function renderSignup() {
     <div class="auth-container">
         <div class="auth-box">
             <h1>Create Account</h1>
-            <form id="login-form">
+            <form id="signup-form">
                 <input 
                     type="text"
                     placeholder="Username"
@@ -58,11 +58,11 @@ const validatePassword = (password) => {
 };
 
 function attachListeners() {
-    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
 
-    loginForm.addEventListener('submit', (event) => {
+    signupForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        const formData = Object.fromEntries(new FormData(loginForm));
+        const formData = Object.fromEntries(new FormData(signupForm));
         
         if (!validateEmail(formData.email)) {
             alert('Invalid email');
