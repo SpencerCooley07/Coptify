@@ -64,13 +64,13 @@ class Coptify(BaseHTTPRequestHandler):
             
             try:
                 hashedPassword = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-                cursor.execute("INSERT INTO users (username, email, hashedPassword) VALUES (?, ?, ?)", (username, email, hashedPassword))
-                connection.commit()
                 token = jwt.encode({
                     'sub': username,
                     'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
                     'iat': int(datetime.utcnow().timestamp())
                 }, SECRET_KEY, 'HS256')
+                cursor.execute("INSERT INTO users (username, email, hashedPassword) VALUES (?, ?, ?)", (username, email, hashedPassword))
+                connection.commit()
                 self.sendJSON(201, {'message': 'User created', 'token': token, 'username': username})
 
             except: self.sendJSON(500, {'message': 'Internal server error'})
