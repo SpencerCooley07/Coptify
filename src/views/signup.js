@@ -4,7 +4,7 @@ export function renderSignup() {
     content.innerHTML = `
     <div class="auth-container">
         <div class="auth-box">
-            <h1>Create Account</h1>
+            <h1>Sign Up</h1>
             <form id="signup-form">
                 <input 
                     type="text"
@@ -40,7 +40,8 @@ export function renderSignup() {
                     autocomplete="new-password"
                     required>
                 
-                <button type="submit">Sign In</button>
+                <button type="submit">Create Account</button>
+                <p>Already have an account? <a href='/login'>Sign In</a></p>
             </form>
         </div>
     </div>
