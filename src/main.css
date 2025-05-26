@@ -156,3 +156,15 @@ nav {
 .auth-box button:hover {
     color: var(--Accent);
 }
+
+.auth-box p {
+    font-size: 1rem;
+}
+
+.auth-box a {
+    transition: 0.3s;
+}
+
+.auth-box a:hover {
+    color: var(--Accent)
+}
