@@ -5,7 +5,8 @@ import mimetypes, json, os
 import sqlite3
 
 # AUTH
-import bcrypt
+from datetime import datetime, timedelta
+import bcrypt, jwt
 
 class Coptify(BaseHTTPRequestHandler):
     # CORS OPTIONS
@@ -65,6 +66,12 @@ class Coptify(BaseHTTPRequestHandler):
                 hashedPassword = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
                 cursor.execute("INSERT INTO users (username, email, hashedPassword) VALUES (?, ?, ?)", (username, email, hashedPassword))
                 connection.commit()
+                token = jwt.encode({
+                    'sub': username,
+                    'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
+                    'iat': int(datetime.utcnow().timestamp())
+                }, SECRET_KEY, 'HS256')
+                self.sendJSON(201, {'message': 'User created', 'token': token, 'username': username})
 
             except: self.sendJSON(500, {'message': 'Internal server error'})
 
