@@ -54,10 +54,7 @@ const validateEmail = (email) => {
 };
 
 const validatePassword = (password) => {
-    return String(password)
-        .match(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-        );
+    return String(password).match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/);
 };
 
 function attachListeners() {
@@ -79,7 +76,6 @@ function attachListeners() {
         };
 
         createAccount(formData);
-
     });
 };
 
@@ -98,7 +94,6 @@ async function createAccount(formData) {
             alert('Authentication successful!');
             localStorage.setItem('token', responseJSON.token);
             localStorage.setItem('username', responseJSON.username);
-
             window.location.href = '/';
         };
 
