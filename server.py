@@ -57,8 +57,7 @@ class Coptify(BaseHTTPRequestHandler):
             if cursor.execute(f"SELECT * FROM users WHERE username = '{username}'").fetchone():
                 self.sendJSON(409, {'message': 'Username already in use'})
                 return
-            
-            if cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone():
+            elif cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone():
                 self.sendJSON(409, {'message': 'Email already in use'})
                 return
             
