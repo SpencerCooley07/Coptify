@@ -1,7 +1,11 @@
+# SERVER + DB
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import ssl, socket, secrets
 import mimetypes, json, os
 import sqlite3
+
+# AUTH
+import bcrypt
 
 class Coptify(BaseHTTPRequestHandler):
     # CORS OPTIONS
@@ -56,6 +60,13 @@ class Coptify(BaseHTTPRequestHandler):
             if cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone():
                 self.sendJSON(409, {'message': 'Email already in use'})
                 return
+            
+            try:
+                hashedPassword = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+                cursor.execute("INSERT INTO users (username, email, hashedPassword) VALUES (?, ?, ?)", (username, email, hashedPassword))
+                connection.commit()
+
+            except: self.sendJSON(500, {'message': 'Internal server error'})
 
 
     # UTIL FUNCTIONS
