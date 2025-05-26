@@ -3,6 +3,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import ssl, socket, secrets
 import mimetypes, json, os
 import sqlite3
+import subprocess
 
 # AUTH
 from datetime import datetime, timedelta
@@ -102,17 +103,23 @@ if __name__ == "__main__":
     # SERVER
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    server_IP = s.getsockname()[0]
+    SERVER_IP = s.getsockname()[0]
     s.close()
 
-    server_address = (server_IP if input('Bind to all? (Y/N)\n').lower() == "n" else '0.0.0.0', 8443)
+    SERVER_ADDRESS = (SERVER_IP if input('Bind to all? (Y/N) ').lower() == "n" else '0.0.0.0', 8443)
 
-    httpd = HTTPServer(server_address, Coptify)
-    httpd.socket = ssl.wrap_socket(
-        httpd.socket,
-        keyfile='ssl/key.pem',
-        certfile='ssl/cert.pem',
-        server_side=True
-    )
-    print('Server Running')
+    httpd = HTTPServer(SERVER_ADDRESS, Coptify)
+    if os.path.exists('ssl'):
+        httpd.socket = ssl.wrap_socket(
+            httpd.socket,
+            keyfile='ssl/key.pem',
+            certfile='ssl/cert.pem',
+            server_side=True
+        )
+        server_access = f'https://{SERVER_IP}:{SERVER_ADDRESS[1]}'
+    else: server_access = f'http://{SERVER_IP}:{SERVER_ADDRESS[1]}'
+    if input('Put server address in clipboard? (Y/N) ').lower() == "y": subprocess.run(f'echo {server_access} | clip', shell=True, check=True)
+    os.system('cls') if os.name == "nt" else os.system('clear')
+
+    print(f'Server running on: {server_access}')
     httpd.serve_forever()
