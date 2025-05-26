@@ -75,7 +75,6 @@ class Coptify(BaseHTTPRequestHandler):
 
             except: self.sendJSON(500, {'message': 'Internal server error'})
 
-
     # UTIL FUNCTIONS
     def sendJSON(self, code: int, data: dict):
         responseBody = json.dumps(data).encode('utf-8')
@@ -118,8 +117,16 @@ if __name__ == "__main__":
         )
         server_access = f'https://{SERVER_IP}:{SERVER_ADDRESS[1]}'
     else: server_access = f'http://{SERVER_IP}:{SERVER_ADDRESS[1]}'
-    if input('Put server address in clipboard? (Y/N) ').lower() == "y": subprocess.run(f'echo {server_access} | clip', shell=True, check=True)
-    os.system('cls') if os.name == "nt" else os.system('clear')
+
+    if os.name == "nt":
+        if input('Put server address in clipboard? (Y/N) ').lower() == "y": subprocess.run(f'echo {server_access} | clip', shell=True, check=True)
+        os.system('cls')
+    if os.name == "posix":
+        if input('Put server address in clipboard? (Y/N) ').lower() == "y":
+            p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+            p.stdin.write(server_access.encode())
+            p.stdin.close()
+        os.system('clear')
 
     print(f'Server running on: {server_access}')
     httpd.serve_forever()
