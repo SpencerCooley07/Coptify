@@ -14,23 +14,24 @@ class Coptify(BaseHTTPRequestHandler):
 
     def do_GET(self): 
         # SENDING STATIC FILES
-        if self.path == '/': file_path = 'public/index.html'
-        elif self.path.startswith('/src/'): file_path = self.path.lstrip('/')
+        if not self.path.startswith('/api/'):
+            if self.path.startswith('/src/'): file_path = self.path.lstrip('/')
+            else: file_path = 'public/index.html'
 
-        try:
-            mime_type, _ = mimetypes.guess_type(file_path)
-            if mime_type is None: mime_type = 'application/octet-stream'
-            with open(file_path, 'rb') as f: content = f.read()
-            self.send_response(200)
-            self.send_header('Content-Type', mime_type)
-            self.send_header('Content-Length', str(len(content)))
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(content)
+            try:
+                mime_type, _ = mimetypes.guess_type(file_path)
+                if mime_type is None: mime_type = 'application/octet-stream'
+                with open(file_path, 'rb') as f: content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', mime_type)
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(content)
 
-        except Exception as e:
-            self.sendJSON(500, {'message': f'Internal Server Error: {e}'})
-            return
+            except Exception as e:
+                self.sendJSON(500, {'message': f'Internal Server Error: {e}'})
+                return
 
     def do_POST(self): pass
 
