@@ -75,6 +75,30 @@ class Coptify(BaseHTTPRequestHandler):
 
             except: self.sendJSON(500, {'message': 'Internal server error'})
 
+        if self.path == '/api/login':
+            email, password = data.get('email'), data.get('password')
+
+            if not (email or password):
+                self.sendJSON(400, {'message': 'Missing fields'})
+                return
+            
+            userData = cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
+            if not userData:
+                self.sendJSON(409, {'message': "Account with that email doesn't exist"})
+                return
+            if not bcrypt.checkpw(password.encode('utf-8'), userData[2].encode('utf-8')):
+                self.sendJSON(409, {'message': 'Incorrect password'})
+                return
+            
+            token = jwt.encode({
+                'sub': userData[0],
+                'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
+                'iat': int(datetime.utcnow().timestamp())
+            }, SECRET_KEY, 'HS256')
+            self.sendJSON(201, {'message': 'Signed in', 'token': token, 'username': userData[0]})
+
+
+
     # UTIL FUNCTIONS
     def sendJSON(self, code: int, data: dict):
         responseBody = json.dumps(data).encode('utf-8')
@@ -97,8 +121,6 @@ if __name__ == "__main__":
     connection = sqlite3.connect('coptify.sqlite')
     cursor = connection.cursor()
 
-    print(cursor.execute(f"SELECT * FROM users WHERE username = 'spencer'").fetchone())
-
     # SERVER
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
@@ -106,7 +128,6 @@ if __name__ == "__main__":
     s.close()
 
     SERVER_ADDRESS = (SERVER_IP if input('Bind to all? (Y/N) ').lower() == "n" else '0.0.0.0', 8443)
-
     httpd = HTTPServer(SERVER_ADDRESS, Coptify)
     if os.path.exists('ssl'):
         httpd.socket = ssl.wrap_socket(
