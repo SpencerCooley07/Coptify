@@ -1,10 +1,12 @@
 import { renderHome } from './views/home.js';
+import { renderLogin } from './views/login.js';
 import { renderSignup } from './views/signup.js';
 
 const routes = {
     '/': renderHome,
     '/home': renderHome,
-    '/signup': renderSignup
+    '/signup': renderSignup,
+    '/login': renderLogin
 };
 
 export function initRouter() {
