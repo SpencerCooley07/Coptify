@@ -31,13 +31,36 @@ class Coptify(BaseHTTPRequestHandler):
 
             except Exception as e:
                 self.sendJSON(500, {'message': f'Internal Server Error: {e}'})
+                return     
+
+    def do_POST(self):
+        contentLength = int(self.headers.get('Content-Length', 0))
+        data = self.rfile.read(contentLength)
+
+        try: data = json.loads(data.decode('utf-8'))
+        except json.JSONDecodeError:
+            self.sendJSON(400, {'message': 'Invalid JSON'})
+            return
+        
+        if self.path == '/api/signup':
+            username, email, password = data.get('username'), data.get('email'), data.get('password')
+
+            if not (username or email or password):
+                self.sendJSON(400, {'message': 'Missing fields'})
+                return
+            
+            if cursor.execute(f"SELECT * FROM users WHERE username = '{username}'").fetchone():
+                self.sendJSON(409, {'message': 'Username already in use'})
+                return
+            
+            if cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone():
+                self.sendJSON(409, {'message': 'Email already in use'})
                 return
 
-    def do_POST(self): pass
 
     # UTIL FUNCTIONS
     def sendJSON(self, code: int, data: dict):
-        responseBody = json.dumps(data).encode('utf8')
+        responseBody = json.dumps(data).encode('utf-8')
         self.send_response(code)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', str(len(responseBody)))
@@ -54,8 +77,10 @@ if __name__ == "__main__":
     else: SECRET_KEY = secrets.token_hex(64)
 
     # DB CONNECTION
-    connection = sqlite3.connect('coptify.db')
+    connection = sqlite3.connect('coptify.sqlite')
     cursor = connection.cursor()
+
+    print(cursor.execute(f"SELECT * FROM users WHERE username = 'spencer'").fetchone())
 
     # SERVER
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
