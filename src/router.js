@@ -1,8 +1,10 @@
 import { renderHome } from './views/home.js';
+import { renderSignup } from './views/signup.js';
 
 const routes = {
     '/': renderHome,
     '/home': renderHome,
+    '/signup': renderSignup
 };
 
 export function initRouter() {
@@ -25,7 +27,7 @@ function handleRoute() {
     console.log(path)
 
     if (routes[path]) {
-        // document.getElementById('content').innerHTML = '';
+        document.getElementById('content').innerHTML = '';
         console.log(routes[path])
         routes[path](path);
         return;
