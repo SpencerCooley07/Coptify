@@ -73,7 +73,6 @@ nav {
 
 .search-bar {
     width: 100%;
-    /* max-width: 1200px; */
     padding: 6px 12px;
     border: none;
     border-radius: 20px;
@@ -97,6 +96,42 @@ nav {
     object-fit: cover;
 }
 
+/* MAIN CONTENT */
+.content {
+    width: calc(100vw - 220px);
+    height: calc(100vh - 120px);
+    color: white;
+    padding-top: 40px;
+    overflow-y: auto;
+}
+
+.coptify-playlists {
+    display: flex;
+    margin-top: 20px;
+}
+
+.content-item {
+    padding-right: 50px;
+}
+
+.content-item h2, h3 {
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.content-item h3 {
+    font-size: 20px;
+}
+
+.content-item h3 {
+    font-weight: normal;
+    font-size: 16px;
+    color: var(--Secondary-Foreground);
+}
+
+/* LOGIN & SIGNUP */
 .auth-container {
     width: 100%;
     height: 100vh;
