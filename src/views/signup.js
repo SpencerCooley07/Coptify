@@ -1,7 +1,7 @@
 export function renderSignup() {
-    const content = document.getElementById('content');
+    const page = document.getElementById('page');
 
-    content.innerHTML = `
+    page.innerHTML = `
     <div class="auth-container">
         <div class="auth-box">
             <h1>Sign Up</h1>
