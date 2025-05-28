@@ -27,7 +27,7 @@ function interceptLinks(event) {
 function handleRoute() {
     const path = window.location.pathname;
     if (routes[path]) {
-        document.getElementById('content').innerHTML = '';
+        document.getElementById('page').innerHTML = '';
         routes[path](path);
         return;
     };
