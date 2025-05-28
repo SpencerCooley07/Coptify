@@ -5,3 +5,4 @@ Coptify uses HTML, CSS, and JavaScript to implement the single page app and clie
 
 ## Note
 Coptify is a school project intended to improve skills in website architecture design, UI, and Python HTTP server implementation.  
+The songs for the Liturgies of St. Basil, St. Gregory, and St. Cyril that are uploaded to GitHub are from Tasbeha.org
