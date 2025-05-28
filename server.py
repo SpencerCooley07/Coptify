@@ -23,7 +23,7 @@ class Coptify(BaseHTTPRequestHandler):
         if not self.path.startswith('/api/'):
             if self.path.startswith('/src/'): file_path = self.path.lstrip('/')
             else: file_path = 'public/index.html'
-
+            
             try:
                 mime_type, _ = mimetypes.guess_type(file_path)
                 if mime_type is None: mime_type = 'application/octet-stream'
@@ -37,7 +37,16 @@ class Coptify(BaseHTTPRequestHandler):
 
             except Exception as e:
                 self.sendJSON(500, {'message': f'Internal Server Error: {e}'})
-                return     
+                return
+            
+        if self.path == "/api/getCoptifyPlaylists":
+            allPlaylists = cursor.execute("SELECT playlistID, name, description FROM playlists WHERE curator = 'Coptify'").fetchall()
+            self.sendJSON(200, {playlist[0]: {
+                'name': playlist[1],
+                'curator': 'Coptify',
+                'description': playlist[2]
+            } for playlist in allPlaylists})
+
 
     def do_POST(self):
         contentLength = int(self.headers.get('Content-Length', 0))
