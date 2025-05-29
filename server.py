@@ -47,12 +47,17 @@ class Coptify(BaseHTTPRequestHandler):
                 'description': playlist[2]
             } for playlist in allPlaylists})
 
+        if self.path.startswith("/api/getPlaylistInformation/"):
+            playlistInfo = cursor.execute(f"SELECT name, description, curator FROM playlists WHERE playlistID = '{self.path.split('/')[-1]}'").fetchone()
+            self.sendJSON(200, {
+                'name': playlistInfo[0],
+                'description': playlistInfo[1],
+                'curator': playlistInfo[2]
+            })
+
         if self.path.startswith("/api/getPlaylist/"):
-            playlistID = self.path.split('/')[-1]
-            playlistSongs = cursor.execute(f"SELECT songID, position FROM playlistSongs WHERE playlistID = '{playlistID}'").fetchall()
-            
             data = {}
-            for song in playlistSongs:
+            for song in cursor.execute(f"SELECT songID, position FROM playlistSongs WHERE playlistID = '{self.path.split('/')[-1]}'").fetchall():
                 songInfo = cursor.execute(f"SELECT name, artist FROM songs WHERE songID = '{song[0]}'").fetchone()
                 data[song[0]] = {
                     'name': songInfo[0],
