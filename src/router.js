@@ -1,6 +1,7 @@
 import { renderHome } from './views/home.js';
 import { renderLogin } from './views/login.js';
 import { renderSignup } from './views/signup.js';
+import { render404 } from './views/404.js';
 
 const routes = {
     '/': renderHome,
@@ -31,4 +32,7 @@ function handleRoute() {
         routes[path](path);
         return;
     };
+
+    document.getElementById('page').innerHTML = '';
+    render404();
 };
