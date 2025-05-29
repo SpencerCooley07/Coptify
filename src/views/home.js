@@ -43,10 +43,9 @@ async function getCoptifyPlaylists() {
         if (!response.ok) {
             alert(responseJSON.message);
         } else {
-            console.log(responseJSON);
             for (var key in responseJSON) {
                 coptifyPlaylists.insertAdjacentHTML('beforeend', `
-                <div id="${key}" class="content-item">
+                <div id="${key}" class="content-item" onclick="window.location='/playlist/${key}';">
                     <img src='/src/assets/playlists/${key}.jpg'>
                     <h2>${responseJSON[key]['name']}</h2>
                     <h3>${responseJSON[key]['curator']}</h3>
