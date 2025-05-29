@@ -47,6 +47,21 @@ class Coptify(BaseHTTPRequestHandler):
                 'description': playlist[2]
             } for playlist in allPlaylists})
 
+        if self.path.startswith("/api/getPlaylist/"):
+            playlistID = self.path.split('/')[-1]
+            playlistSongs = cursor.execute(f"SELECT songID, position FROM playlistSongs WHERE playlistID = '{playlistID}'").fetchall()
+            
+            data = {}
+            for song in playlistSongs:
+                songInfo = cursor.execute(f"SELECT name, artist FROM songs WHERE songID = '{song[0]}'").fetchone()
+                data[song[0]] = {
+                    'name': songInfo[0],
+                    'artist': songInfo[1],
+                    'position': song[1]
+                }
+            self.sendJSON(200, data)
+
+
 
     def do_POST(self):
         contentLength = int(self.headers.get('Content-Length', 0))
@@ -156,6 +171,7 @@ if __name__ == "__main__":
             p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
             p.stdin.write(server_access.encode())
             p.stdin.close()
+            os.system('clear')
         os.system('clear')
 
     print(f'Server running on: {server_access}')
