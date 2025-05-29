@@ -131,6 +131,23 @@ nav {
     color: var(--Secondary-Foreground);
 }
 
+/* PLAYLIST */
+.playlist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.playlist-content {
+    margin-top: 20px;
+}
+
+.playlist-item {
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--Secondary-Foreground);
+    display: flex;
+    justify-content: space-between;
+}
+
 /* LOGIN & SIGNUP */
 .auth-container {
     width: 100%;
