@@ -20,9 +20,13 @@ export function renderPlaylist(playlistID) {
                 <a href="/login"><img id="profile-icon" src="/src/assets/profile.png" alt="Profile" class="profile-icon"></a>
             </div>
         </nav>
-        <div>
-            <h1>Playlist: ${playlistID}</h1>
-            <div id="playlist-container">Loading...</div>
+        <div class="content">
+            <div class="playlist-header">
+                <img style="width: 35px; height: 35px;" src="/src/assets/playlists/${playlistID}.jpg">
+                <h1 id="playlist-title"></h1>
+            </div>
+            <div id="playlist-content" class="playlist-content">
+            </div>
         </div>
     `;
 
@@ -30,7 +34,8 @@ export function renderPlaylist(playlistID) {
 }
 
 async function getPlaylistData(playlistID) {
-    const playlistContainer = document.getElementById('playlist-container');
+    const playlistContent = document.getElementById('playlist-content');
+    const playlistHeader = document.getElementById('playlist-title');
 
     try {
         const response = await fetch(`/api/getPlaylist/${playlistID}`, {
@@ -38,10 +43,24 @@ async function getPlaylistData(playlistID) {
         });
         const responseJSON = await response.json();
 
+        const playlistInfoResponse = await fetch(`/api/getPlaylistInformation/${playlistID}`, {
+            method: 'GET'
+        });
+        const playlistInformation = await playlistInfoResponse.json()
+
         if (!response.ok) {
             alert(responseJSON.message);
         } else {
             console.log(responseJSON);
+            playlistHeader.innerHTML = `${playlistInformation['name']}`;
+            for (var key in responseJSON) {
+                playlistContent.insertAdjacentHTML('beforeend', `
+                    <div id="${key}" class="playlist-item">
+                        <p>${responseJSON[key]['name']}</p>
+                        <p>${responseJSON[key]['artist']}</p>
+                    </div>
+                `);
+            };
         };
     } catch (error) {
         alert('Could not retrieve data');
