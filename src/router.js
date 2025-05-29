@@ -3,12 +3,13 @@ import { renderLogin } from './views/login.js';
 import { renderSignup } from './views/signup.js';
 import { render404 } from './views/404.js';
 
-const routes = {
-    '/': renderHome,
-    '/home': renderHome,
-    '/signup': renderSignup,
-    '/login': renderLogin
-};
+const routes = [
+    { path: /^\/$/, render: renderHome },
+    { path: /^\/home$/, render: renderHome },
+    { path: /^\/signup$/, render: renderSignup },
+    { path: /^\/login$/, render: renderLogin },
+    // { path: /^\/playlist\/([^/]+)$/, render: renderPlaylist },
+];
 
 export function initRouter() {
     window.addEventListener('popstate', handleRoute);
@@ -27,12 +28,15 @@ function interceptLinks(event) {
 
 function handleRoute() {
     const path = window.location.pathname;
-    if (routes[path]) {
-        document.getElementById('page').innerHTML = '';
-        routes[path](path);
-        return;
-    };
-
     document.getElementById('page').innerHTML = '';
+
+    for (const route of routes) {
+        const match = path.match(route.path);
+        if (match) {
+            const params = match.slice(1);
+            route.render(...params);
+            return;
+        };
+    };
     render404();
 };
