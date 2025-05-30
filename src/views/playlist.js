@@ -1,3 +1,5 @@
+import { loadSong } from "../player.js";
+
 export function renderPlaylist(playlistID) {
     const page = document.getElementById('page');
     page.innerHTML = `
@@ -51,7 +53,6 @@ async function getPlaylistData(playlistID) {
         if (!response.ok) {
             alert(responseJSON.message);
         } else {
-            console.log(responseJSON);
             playlistHeader.innerHTML = `${playlistInformation['name']}`;
             for (var key in responseJSON) {
                 playlistContent.insertAdjacentHTML('beforeend', `
@@ -61,9 +62,16 @@ async function getPlaylistData(playlistID) {
                     </div>
                 `);
             };
+            document.querySelectorAll('.playlist-item').forEach(item => {
+                item.addEventListener('click', playSong);
+            });
         };
     } catch (error) {
         alert('Could not retrieve data');
         console.log(error);
     };
+}
+
+function playSong (event) {
+    loadSong(event.target.getAttribute('id'));
 }
