@@ -57,8 +57,8 @@ async function getPlaylistData(playlistID) {
             for (var key in responseJSON) {
                 playlistContent.insertAdjacentHTML('beforeend', `
                     <div id="${key}" class="playlist-item">
-                        <p>${responseJSON[key]['name']}</p>
-                        <p>${responseJSON[key]['artist']}</p>
+                        <p style="pointer-events: none;">${responseJSON[key]['name']}</p>
+                        <p style="pointer-events: none;">${responseJSON[key]['artist']}</p>
                     </div>
                 `);
             };
