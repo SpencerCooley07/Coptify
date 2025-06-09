@@ -400,14 +400,14 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     text-decoration: none;
-    box-shadow: 0 5px 15px rgba(255, 85, 85, 0.6);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.6);
     transition: background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .btn-home:hover,
 .btn-home:focus {
     background-color: var(--Accent-Dark);
-    box-shadow: 0 8px 25px rgba(255, 85, 85, 0.85);
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.85);
     outline: none;
     cursor: pointer;
 }
