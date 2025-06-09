@@ -12,22 +12,53 @@ import bcrypt, jwt
 class Coptify(BaseHTTPRequestHandler):
     # CORS OPTIONS
     def do_OPTIONS(self):
+        # Allow others to access the website
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
 
-    def do_GET(self): 
-        # SENDING STATIC FILES
+    def do_GET(self):
+        # Serve static content
         if not self.path.startswith('/api/'):
             if self.path.startswith('/src/'): file_path = self.path.lstrip('/')
             else: file_path = 'public/index.html'
-            
+
             try:
+                # Get the file mime_type for correct headers
                 mime_type, _ = mimetypes.guess_type(file_path)
                 if mime_type is None: mime_type = 'application/octet-stream'
+
+                file_size = os.path.getsize(file_path)
+
+                # Handle range requests for audio so that scrubbing works
+                range_header = self.headers.get('Range')
+                if mime_type.startswith('audio/') and range_header:
+                    byte_range = range_header.strip().split('=')[-1]
+                    start_str, end_str = byte_range.split('-')
+                    start, end = int(start_str), min(int(end_str) if end_str else file_size - 1, file_size - 1)
+
+                    length = end - start + 1
+
+                    with open(file_path, 'rb') as f:
+                        f.seek(start)
+                        data = f.read(length)
+
+                    self.send_response(206) # Partial Content response
+                    self.send_header('Content-Type', mime_type)
+                    self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
+                    self.send_header('Content-Length', str(length))
+                    self.send_header('Accept-Ranges', 'bytes')
+                    self.send_header('Connection', 'keep-alive') # Keeps a connection alive for scrubbing
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+
+                # No range or non-audio: serve whole file
                 with open(file_path, 'rb') as f: content = f.read()
+
                 self.send_response(200)
                 self.send_header('Content-Type', mime_type)
                 self.send_header('Content-Length', str(len(content)))
@@ -37,9 +68,9 @@ class Coptify(BaseHTTPRequestHandler):
 
             except Exception as e:
                 self.sendJSON(500, {'message': f'Internal Server Error: {e}'})
-                return
             
         if self.path == "/api/getCoptifyPlaylists":
+            # Grabs the playlistID, name, and description from the DB table "playlists" if the curator is Coptify (Official Playlists)
             allPlaylists = cursor.execute("SELECT playlistID, name, description FROM playlists WHERE curator = 'Coptify'").fetchall()
             self.sendJSON(200, {playlist[0]: {
                 'name': playlist[1],
@@ -48,6 +79,7 @@ class Coptify(BaseHTTPRequestHandler):
             } for playlist in allPlaylists})
 
         if self.path.startswith("/api/getPlaylistInformation/"):
+            # Grabs the name, description, and curator for a specific playlist based on playlistID for the frontend
             playlistInfo = cursor.execute(f"SELECT name, description, curator FROM playlists WHERE playlistID = '{self.path.split('/')[-1]}'").fetchone()
             self.sendJSON(200, {
                 'name': playlistInfo[0],
@@ -56,6 +88,7 @@ class Coptify(BaseHTTPRequestHandler):
             })
 
         if self.path.startswith("/api/getPlaylist/"):
+            # Grabs necessary song information given a playlistID
             data = {}
             for song in cursor.execute(f"SELECT songID, position FROM playlistSongs WHERE playlistID = '{self.path.split('/')[-1]}'").fetchall():
                 songInfo = cursor.execute(f"SELECT name, artist FROM songs WHERE songID = '{song[0]}'").fetchone()
@@ -69,6 +102,7 @@ class Coptify(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
+        # First gets the body of the POST method
         contentLength = int(self.headers.get('Content-Length', 0))
         data = self.rfile.read(contentLength)
 
@@ -84,6 +118,7 @@ class Coptify(BaseHTTPRequestHandler):
                 self.sendJSON(400, {'message': 'Missing fields'})
                 return
             
+            # Checks if user already exists
             if cursor.execute(f"SELECT * FROM users WHERE username = '{username}'").fetchone():
                 self.sendJSON(409, {'message': 'Username already in use'})
                 return
@@ -92,6 +127,7 @@ class Coptify(BaseHTTPRequestHandler):
                 return
             
             try:
+                # Sends back a JWT token and adds user to DB
                 hashedPassword = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
                 token = jwt.encode({
                     'sub': username,
@@ -111,6 +147,7 @@ class Coptify(BaseHTTPRequestHandler):
                 self.sendJSON(400, {'message': 'Missing fields'})
                 return
             
+            # Verifies user information is correct (Guard Clauses)
             userData = cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
             if not userData:
                 self.sendJSON(409, {'message': "Account with that email doesn't exist"})
@@ -119,6 +156,7 @@ class Coptify(BaseHTTPRequestHandler):
                 self.sendJSON(409, {'message': 'Incorrect password'})
                 return
             
+            # Sends back a JWT token for session management
             token = jwt.encode({
                 'sub': userData[0],
                 'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
@@ -153,11 +191,12 @@ if __name__ == "__main__":
     # SERVER
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    SERVER_IP = s.getsockname()[0]
+    SERVER_IP = s.getsockname()[0] # Grabs the IP of the host server
     s.close()
 
     SERVER_ADDRESS = (SERVER_IP if input('Bind to all? (Y/N) ').lower() == "n" else '0.0.0.0', 8443)
     httpd = HTTPServer(SERVER_ADDRESS, Coptify)
+    # If HTTPS connection is available (certificates supplied) then hosts with HTTPS else HTTP
     if os.path.exists('ssl'):
         httpd.socket = ssl.wrap_socket(
             httpd.socket,
@@ -168,15 +207,10 @@ if __name__ == "__main__":
         server_access = f'https://{SERVER_IP}:{SERVER_ADDRESS[1]}'
     else: server_access = f'http://{SERVER_IP}:{SERVER_ADDRESS[1]}'
 
-    if os.name == "nt":
-        if input('Put server address in clipboard? (Y/N) ').lower() == "y": subprocess.run(f'echo {server_access} | clip', shell=True, check=True)
-        os.system('cls')
-    if os.name == "posix":
-        if input('Put server address in clipboard? (Y/N) ').lower() == "y":
-            p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
-            p.stdin.write(server_access.encode())
-            p.stdin.close()
-            os.system('clear')
+    if input('Put server address in clipboard? (Y/N) ').lower() == "y":
+        p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+        p.stdin.write(server_access.encode())
+        p.stdin.close()
         os.system('clear')
 
     print(f'Server running on: {server_access}')
