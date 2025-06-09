@@ -179,10 +179,23 @@ body {
     transform: scale(1.05);
 }
 
+.playlist-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
 .playlist-title {
     font-size: 2.25rem;
     font-weight: 700;
     color: var(--primary-fg);
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+}
+
+.playlist-curator {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--secondary-fg);
     text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
 }
 
