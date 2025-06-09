@@ -116,7 +116,6 @@ body {
 
 .coptify-playlists {
     display: flex;
-    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -132,11 +131,12 @@ body {
 
 .content-item:hover {
     transform: scale(1.03);
+    transform-origin: center;
 }
 
 .content-item img {
-    width: 100%;
-    height: auto;
+    width: 200px;
+    height: 200px;
     border-radius: 8px;
 }
 
