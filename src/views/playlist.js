@@ -6,29 +6,29 @@ export function renderPlaylist(playlistID) {
         <nav class="navbar">
             <div class="nav-left">
                 <div class="logo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M3 11V13M6 8V16M9 10V14M12 7V17M15 4V20M18 9V15M21 11V13" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 11V13M6 8V16M9 10V14M12 7V17M15 4V20M18 9V15M21 11V13"
+                              stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
                 <ul class="nav-items">
                     <li><a href="/" data-route>Home</a></li>
                     <li><a href="/playlists" data-route>Playlists</a></li>
                 </ul>
             </div>
-
             <div class="nav-center">
                 <input type="text" class="search-bar" placeholder="Search">
             </div>
-
             <div class="nav-right">
                 <a href="/login"><img id="profile-icon" src="/src/assets/profile.png" alt="Profile" class="profile-icon"></a>
             </div>
         </nav>
         <div class="content">
             <div class="playlist-header">
-                <img style="width: 35px; height: 35px;" src="/src/assets/playlists/${playlistID}.jpg">
-                <h1 id="playlist-title"></h1>
+                <img class="playlist-cover" src="/src/assets/playlists/${playlistID}.jpg" alt="Cover Art">
+                <h1 id="playlist-title" class="playlist-title">Loading...</h1>
             </div>
-            <div id="playlist-content" class="playlist-content">
-            </div>
+            <div id="playlist-content" class="playlist-content"></div>
         </div>
     `;
 
@@ -37,41 +37,48 @@ export function renderPlaylist(playlistID) {
 
 async function getPlaylistData(playlistID) {
     const playlistContent = document.getElementById('playlist-content');
-    const playlistHeader = document.getElementById('playlist-title');
+    const playlistTitle = document.getElementById('playlist-title');
 
     try {
-        const response = await fetch(`/api/getPlaylist/${playlistID}`, {
-            method: 'GET'
-        });
-        const responseJSON = await response.json();
+        const [songsRes, infoRes] = await Promise.all([
+            fetch(`/api/getPlaylist/${playlistID}`),
+            fetch(`/api/getPlaylistInformation/${playlistID}`)
+        ]);
 
-        const playlistInfoResponse = await fetch(`/api/getPlaylistInformation/${playlistID}`, {
-            method: 'GET'
-        });
-        const playlistInformation = await playlistInfoResponse.json()
+        const songs = await songsRes.json();
+        const info = await infoRes.json();
 
-        if (!response.ok) {
-            alert(responseJSON.message);
-        } else {
-            playlistHeader.innerHTML = `${playlistInformation['name']}`;
-            for (var key in responseJSON) {
-                playlistContent.insertAdjacentHTML('beforeend', `
-                    <div id="${key}" class="playlist-item">
-                        <p style="pointer-events: none;">${responseJSON[key]['name']}</p>
-                        <p style="pointer-events: none;">${responseJSON[key]['artist']}</p>
+        if (!songsRes.ok || !infoRes.ok) {
+            return alert(songs.message || info.message);
+        }
+
+        playlistTitle.textContent = info.name;
+
+        Object.entries(songs).forEach(([id, { name, artist }]) => {
+            playlistContent.insertAdjacentHTML('beforeend', `
+                <div class="playlist-item" data-id="${id}">
+                    <div class="song-info">
+                        <p class="song-name">${name}</p>
+                        <p class="song-artist">${artist}</p>
                     </div>
-                `);
-            };
-            document.querySelectorAll('.playlist-item').forEach(item => {
-                item.addEventListener('click', playSong);
-            });
-        };
-    } catch (error) {
-        alert('Could not retrieve data');
-        console.log(error);
-    };
-}
+                    <div class="song-actions">
+                        <button class="play-button" title="Play song">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 4V20L20 12L7 4Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `);
 
-function playSong (event) {
-    loadSong(event.target.getAttribute('id'));
+        });
+
+        document.querySelectorAll('.playlist-item').forEach(item =>
+            item.addEventListener('click', () => loadSong(item.dataset.id))
+        );
+
+    } catch (err) {
+        console.error(err);
+        alert('Could not retrieve playlist data.');
+    }
 }

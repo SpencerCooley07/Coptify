@@ -1,76 +1,46 @@
 export function renderLogin() {
     const page = document.getElementById('page');
-
     page.innerHTML = `
-    <div class="auth-container">
-        <div class="auth-box">
-            <h1>Login</h1>
-            <form id="login-form">
-                <input
-                    type="email"
-                    placeholder="Email"
-                    id="emailInput"
-                    name="email"
-                    autocomplete="email"
-                    required>
-                
-                <input
-                    type="password"
-                    placeholder="Password"
-                    id="passwordInput"
-                    name="password"
-                    autocomplete="new-password"
-                    required>
-                
-                <button type="submit">Sign In</button>
-                <p>Don't have an account? <a href='/signup'>Sign up</a></p>
-            </form>
+        <div class="auth-container">
+            <div class="auth-box">
+                <h1>Login</h1>
+                <form id="login-form">
+                    <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+                    <input type="password" name="password" placeholder="Password" required autocomplete="current-password" />
+                    <button type="submit">Sign In</button>
+                    <p>Don't have an account? <a href="/signup" data-route>Sign up</a></p>
+                </form>
+            </div>
         </div>
-    </div>
     `;
+    attachLoginListeners();
+}
 
-    attachListeners();
-};
-
-const validateEmail = (email) => {
-    return String(email).match(/\S+@\S+\.\S+/);
-};
-
-function attachListeners() {
-    const loginForm = document.getElementById('login-form');
-
-    loginForm.addEventListener('submit', (event) => {
+function attachLoginListeners() {
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const formData = Object.fromEntries(new FormData(loginForm));
-        
-        if (!validateEmail(formData.email)) {
+        const formData = Object.fromEntries(new FormData(form));
+
+        if (!isValidEmail(formData.email)) {
             alert('Invalid email');
             return;
-        };
+        }
 
-        login(formData);
-    });
-};
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const json = await res.json();
 
-async function login(formData) {
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(formData)
-        });
-        const responseJSON = await response.json();
-
-        if (!response.ok) {
-            alert(responseJSON.message);
-        } else {
-            alert('Authentication successful!');
-            localStorage.setItem('token', responseJSON.token);
-            localStorage.setItem('username', responseJSON.username);
+            if (!res.ok) return alert(json.message);
+            localStorage.setItem('token', json.token);
+            localStorage.setItem('username', json.username);
             window.location.href = '/';
-        };
-
-    } catch (error) {
-        alert('Authentication failed, please try again.');
-    };
-};
+        } catch {
+            alert('Authentication failed, please try again.');
+        }
+    });
+}

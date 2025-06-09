@@ -1,104 +1,69 @@
 export function renderSignup() {
     const page = document.getElementById('page');
-
     page.innerHTML = `
-    <div class="auth-container">
-        <div class="auth-box">
-            <h1>Sign Up</h1>
-            <form id="signup-form">
-                <input 
-                    type="text"
-                    placeholder="Username"
-                    id="usernameInput"
-                    name="username"
-                    autocomplete="username"
-                    pattern="^[A-Za-z][A-Za-z0-9_]{3,19}$"
-                    title="Must be 3-20 alphanumeric characters and begin with a letter"
-                    required>
-                
-                <input
-                    type="email"
-                    placeholder="Email"
-                    id="emailInput"
-                    name="email"
-                    autocomplete="email"
-                    required>
-                
-                <input
-                    type="password"
-                    placeholder="Password"
-                    id="passwordInput"
-                    name="password"
-                    autocomplete="new-password"
-                    required>
-                
-                <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    id="confirmPasswordInput"
-                    name="confirmPassword"
-                    autocomplete="new-password"
-                    required>
-                
-                <button type="submit">Create Account</button>
-                <p>Already have an account? <a href='/login'>Sign In</a></p>
-            </form>
+        <div class="auth-container">
+            <div class="auth-box">
+                <h1>Sign Up</h1>
+                <form id="signup-form">
+                    <input type="text" name="username" placeholder="Username" required
+                        pattern="^[A-Za-z][A-Za-z0-9_]{3,19}$"
+                        title="3–20 characters. Letters, numbers, underscores. Start with a letter." 
+                        autocomplete="username" />
+                    <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+                    <input type="password" name="password" placeholder="Password" required autocomplete="new-password" />
+                    <input type="password" name="confirmPassword" placeholder="Confirm Password" required autocomplete="new-password" />
+                    <button type="submit">Create Account</button>
+                    <p>Already have an account? <a href="/login" data-route>Sign In</a></p>
+                </form>
+            </div>
         </div>
-    </div>
     `;
+    attachSignupListeners();
+}
 
-    attachListeners();
-};
-
-const validateEmail = (email) => {
-    return String(email).match(/\S+@\S+\.\S+/);
-};
-
-const validatePassword = (password) => {
-    return String(password).match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/);
-};
-
-function attachListeners() {
-    const signupForm = document.getElementById('signup-form');
-
-    signupForm.addEventListener('submit', (event) => {
+function attachSignupListeners() {
+    const form = document.getElementById('signup-form');
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const formData = Object.fromEntries(new FormData(signupForm));
-        
-        if (!validateEmail(formData.email)) {
+        const formData = Object.fromEntries(new FormData(form));
+
+        if (!isValidEmail(formData.email)) {
             alert('Invalid email');
             return;
-        } else if (!validatePassword(formData.password)) {
-            alert("Password must be 8+ characters and have at least 1:\n• Uppercase character\n• Lowercase character\n• Number\n• Special Character")
+        }
+
+        if (!isValidPassword(formData.password)) {
+            alert("Password must be at least 8 characters, including:\n• uppercase\n• lowercase\n• digit\n• special character");
             return;
-        } else if (formData.password != formData.confirmPassword) {
-            alert('Passwords do not match!');
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            alert('Passwords do not match');
             return;
-        };
+        }
 
-        createAccount(formData);
-    });
-};
+        try {
+            const res = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const json = await res.json();
 
-async function createAccount(formData) {
-    try {
-        const response = await fetch('/api/signup', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(formData)
-        });
-        const responseJSON = await response.json();
-
-        if (!response.ok) {
-            alert(responseJSON.message);
-        } else {
-            alert('Authentication successful!');
-            localStorage.setItem('token', responseJSON.token);
-            localStorage.setItem('username', responseJSON.username);
+            if (!res.ok) return alert(json.message);
+            localStorage.setItem('token', json.token);
+            localStorage.setItem('username', json.username);
             window.location.href = '/';
-        };
+        } catch {
+            alert('Authentication failed, please try again.');
+        }
+    });
+}
 
-    } catch (error) {
-        alert('Authentication failed, please try again.');
-    };
-};
+function isValidEmail(email) {
+    return /\S+@\S+\.\S+/.test(email);
+}
+
+function isValidPassword(password) {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password);
+}
