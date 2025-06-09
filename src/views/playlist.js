@@ -26,7 +26,10 @@ export function renderPlaylist(playlistID) {
         <div class="content">
             <div class="playlist-header">
                 <img class="playlist-cover" src="/src/assets/playlists/${playlistID}.jpg" alt="Cover Art">
-                <h1 id="playlist-title" class="playlist-title">Loading...</h1>
+                <div class="playlist-info">
+                    <h1 id="playlist-title" class="playlist-title">Loading...</h1>
+                    <h2 id="playlist-curator" class="playlist-curator">Loading...</h2>
+                </div>
             </div>
             <div id="playlist-content" class="playlist-content"></div>
         </div>
@@ -38,6 +41,7 @@ export function renderPlaylist(playlistID) {
 async function getPlaylistData(playlistID) {
     const playlistContent = document.getElementById('playlist-content');
     const playlistTitle = document.getElementById('playlist-title');
+    const playlistCurator = document.getElementById('playlist-curator')
 
     try {
         const [songsRes, infoRes] = await Promise.all([
@@ -53,6 +57,7 @@ async function getPlaylistData(playlistID) {
         }
 
         playlistTitle.textContent = info.name;
+        playlistCurator.textContent = info.curator;
 
         Object.entries(songs).forEach(([id, { name, artist }]) => {
             playlistContent.insertAdjacentHTML('beforeend', `
