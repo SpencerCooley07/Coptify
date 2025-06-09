@@ -5,6 +5,7 @@
     --primary-fg: #ffffff;
     --secondary-fg: #999999;
     --accent: #ffd700;
+    --accent-light: #ffe710;
 }
 
 * {
@@ -29,15 +30,6 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-}
-
-/* PLAYER AREA */
-#player {
-    background-color: var(--secondary-bg);
-    color: var(--primary-fg);
-    padding: 10px 110px;
-    border-top: 1px solid var(--tertiary-bg);
-    height: 80px; /* arbitrary height - should be controlled by player UI */
 }
 
 /* NAVBAR */
@@ -170,8 +162,8 @@ body {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    padding: 2rem 1rem 1rem;
-    border-bottom: 2px solid var(--Secondary-Foreground);
+    padding: 0rem 1rem 1rem;
+    border-bottom: 2px solid var(--secondary-fg);
 }
 
 .playlist-cover {
@@ -190,7 +182,7 @@ body {
 .playlist-title {
     font-size: 2.25rem;
     font-weight: 700;
-    color: var(--Primary-Foreground);
+    color: var(--primary-fg);
     text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
 }
 
@@ -199,13 +191,14 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    margin-bottom: 60px;
 }
 
 .playlist-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--Secondary-Background);
+    background-color: var(--secondary-bg);
     padding: 1rem 1.25rem;
     border-radius: 14px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -214,7 +207,7 @@ body {
 }
 
 .playlist-item:hover {
-    background-color: var(--Tertiary-Background);
+    background-color: var(--tertiary-bg);
     transform: translateY(-2px);
 }
 
@@ -228,12 +221,12 @@ body {
 .song-name {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--Primary-Foreground);
+    color: var(--primary-fg);
 }
 
 .song-artist {
     font-size: 0.95rem;
-    color: var(--Secondary-Foreground);
+    color: var(--secondary-fg);
 }
 
 .song-actions {
@@ -242,11 +235,11 @@ body {
 }
 
 .play-button {
-    background-color: var(--Tertiary-Background);
+    background-color: var(--tertiary-bg);
     border: none;
     padding: 0.5rem;
     border-radius: 50%;
-    color: var(--Accent);
+    color: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,8 +247,8 @@ body {
 }
 
 .play-button:hover {
-    background-color: var(--Accent);
-    color: var(--Primary-Background);
+    background-color: var(--accent);
+    color: var(--primary-bg);
     transform: scale(1.15);
 }
 
@@ -343,20 +336,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--Primary-Background);
+    background-color: var(--primary-bg);
     padding: 1rem;
     box-sizing: border-box;
 }
 
 .content-404 {
-    background-color: var(--Secondary-Background);
+    background-color: var(--secondary-bg);
     padding: 3rem 2rem;
     border-radius: 16px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     max-width: 480px;
     width: 100%;
     text-align: center;
-    color: var(--Primary-Foreground);
+    color: var(--primary-fg);
     user-select: none;
 }
 
@@ -364,7 +357,7 @@ body {
     font-size: 6rem;
     font-weight: 900;
     margin: 0 0 0.25rem 0;
-    color: var(--Accent);
+    color: var(--accent);
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
@@ -375,7 +368,7 @@ body {
 
 .icon-404 {
     margin: 1rem 0 1.5rem;
-    color: var(--Accent);
+    color: var(--primary-fg);
 }
 
 .content-404 p {
@@ -384,7 +377,8 @@ body {
 }
 
 .content-404 code {
-    background-color: var(--Tertiary-Background);
+    background-color: var(--tertiary-bg);
+    color: var(--accent);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-family: monospace;
@@ -395,8 +389,8 @@ body {
     display: inline-block;
     padding: 0.75rem 2rem;
     border-radius: 30px;
-    background-color: var(--Accent);
-    color: var(--Primary-Background);
+    background-color: var(--accent);
+    color: var(--primary-bg);
     font-weight: 700;
     font-size: 1.1rem;
     text-decoration: none;
@@ -406,8 +400,99 @@ body {
 
 .btn-home:hover,
 .btn-home:focus {
-    background-color: var(--Accent-Dark);
+    background-color: var(--accent-light);
     box-shadow: 0 8px 25px rgba(255, 215, 0, 0.85);
     outline: none;
     cursor: pointer;
+}
+
+/* PLAYER */
+#player {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--secondary-bg);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.player-ui {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.media-button {
+    background: var(--tertiary-bg);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--primary-fg);
+    transition: background 0.2s ease;
+}
+
+.media-button:hover {
+    background: var(--accent);
+    color: var(--primary-bg);
+}
+
+.slider-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--tertiary-bg);
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+}
+
+#progress {
+    width: 100%;
+}
+
+.progressbar-label {
+    font-size: 0.8rem;
+    color: var(--secondary-fg);
+    min-width: 40px;
+    text-align: right;
 }
