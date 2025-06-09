@@ -117,7 +117,7 @@ body {
 .coptify-playlists {
     display: flex;
     flex-wrap: wrap;
-    gap: 30px;
+    gap: 10px;
 }
 
 .content-item {
@@ -125,7 +125,8 @@ body {
     flex-direction: column;
     width: 200px;
     text-decoration: none;
-    gap: 8px;
+    gap: 5px;
+    margin: 0 10px;
     transition: transform 0.2s ease;
 }
 
