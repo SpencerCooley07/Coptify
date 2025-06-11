@@ -21,12 +21,7 @@ function attachLoginListeners() {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = Object.fromEntries(new FormData(form));
-
-        if (!isValidEmail(formData.email)) {
-            alert('Invalid email');
-            return;
-        }
-
+        
         try {
             const res = await fetch('/api/login', {
                 method: 'POST',
