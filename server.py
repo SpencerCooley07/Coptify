@@ -149,6 +149,31 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
                 "artist": song[2]
             } for song in songs])
             return
+        
+        if self.path == "/api/getLikedSongs":
+            authHeader = self.headers.get('Authorization')
+
+            if not authHeader or not authHeader.startswith("Bearer "):
+                self.sendJSON(401, {"message": "Missing or Invalid Authentication header"})
+                return
+            
+            token = authHeader.split(' ')[1]
+
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                username = payload['sub']
+            except jwt.InvalidTokenError:
+                self.sendJSON(401, {"message": "Invalid token"})
+                return
+
+            data = {}
+            for songID in cursor.execute(f"SELECT songID FROM likes WHERE username = '{username}' ORDER BY time ASC").fetchall():
+                songInfo = cursor.execute(f"SELECT name, artist FROM songs WHERE songID = '{songID[0]}'").fetchone()
+                data[songID[0]] = {
+                    'name': songInfo[0],
+                    'artist': songInfo[1]
+                }
+            self.sendJSON(200, data)
 
 
 
@@ -175,7 +200,7 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
                 return
             
             # Checks if user already exists
-            if cursor.execute(f"SELECT * FROM users WHERE username = '{username}'").fetchone():
+            if cursor.execute(f"SELECT * FROM users WHERE username = '{username}'").fetchone() or username.lower() == "coptify":
                 self.sendJSON(409, {'message': 'Username already in use'})
                 return
             elif cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone():

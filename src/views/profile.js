@@ -2,7 +2,7 @@ import { allSongs } from "../app.js";
 import { fuzzySearchSongs } from "../utils.js";
 import { loadSong } from "../player.js";
 
-export function renderPlaylist(playlistID) {
+export function renderProfile() {
     const page = document.getElementById('page');
     page.innerHTML = `
         <nav class="navbar">
@@ -28,16 +28,22 @@ export function renderPlaylist(playlistID) {
                 </div>
             </div>
         </nav>
-        <div class="content">
-            <div class="playlist-header">
-                <img class="playlist-cover" src="/src/assets/playlists/${playlistID}.jpg" alt="Cover Art">
-                <div class="playlist-info">
-                    <h1 id="playlist-title" class="playlist-title">Loading...</h1>
-                    <h2 id="playlist-curator" class="playlist-curator">Loading...</h2>
+        <main class="content">
+            <section class="profile-section">
+                <div class="profile-header">
+                    <div class="profile-pic-wrapper">
+                        <img src="/src/assets/profile.png" alt="Profile Picture" class="profile-page-pic">
+                        <label class="edit-overlay">
+                            <span>Edit</span>
+                            <input type="file" id="upload-profile-pic" class="file-input" accept="image/*">
+                        </label>
+                    </div>
+                    <h3 class="profile-name">${localStorage.getItem("username")}</h2>
                 </div>
-            </div>
-            <div id="playlist-content" class="playlist-content"></div>
-        </div>
+            </section>
+            <h2>Liked Songs</h1>
+            <div id="liked-songs" class="liked-content"></div>
+        </main>
     `;
 
     // Search
@@ -71,7 +77,7 @@ export function renderPlaylist(playlistID) {
                 </div>
             `;
 
-            card.addEventListener('click', () => loadSong(song.id));
+            card.addEventListener('click', () => {loadSong(song.id);});
             searchDropdown.appendChild(card);
         });
 
@@ -117,32 +123,29 @@ export function renderPlaylist(playlistID) {
         });
     }
 
-    getPlaylistData(playlistID);
+    const fileInput = document.getElementById('upload-profile-pic');
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+    });
+
+    getLikedSongs();
 }
 
-async function getPlaylistData(playlistID) {
-    const playlistContent = document.getElementById('playlist-content');
-    const playlistTitle = document.getElementById('playlist-title');
-    const playlistCurator = document.getElementById('playlist-curator');
-
+async function getLikedSongs() {
+    const likedContent = document.getElementById('liked-songs');
     try {
-        const [songsRes, infoRes] = await Promise.all([
-            fetch(`/api/getPlaylist/${playlistID}`),
-            fetch(`/api/getPlaylistInformation/${playlistID}`)
-        ]);
 
-        const songs = await songsRes.json();
-        const info = await infoRes.json();
+        const likedResponse = await fetch('/api/getLikedSongs', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+        })
 
-        if (!songsRes.ok || !infoRes.ok) {
-            return alert(songs.message || info.message);
-        }
-
-        playlistTitle.textContent = info.name;
-        playlistCurator.textContent = info.curator;
+        const songs = await likedResponse.json();
+        if (!likedResponse.ok) return;
 
         Object.entries(songs).forEach(([id, { name, artist }]) => {
-            playlistContent.insertAdjacentHTML('beforeend', `
+            likedContent.insertAdjacentHTML('beforeend', `
                 <div class="playlist-item" data-id="${id}">
                     <div class="song-info">
                         <p class="song-name">${name}</p>
