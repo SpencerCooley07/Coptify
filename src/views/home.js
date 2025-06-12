@@ -1,6 +1,5 @@
 export function renderHome() {
     const page = document.getElementById('page');
-
     page.innerHTML = `
         <nav class="navbar">
             <div class="nav-left">
@@ -12,7 +11,6 @@ export function renderHome() {
                 </div>
                 <ul class="nav-items">
                     <li><a href="/" data-route>Home</a></li>
-                    <li><a href="/playlists" data-route>Playlists</a></li>
                 </ul>
             </div>
             <div class="nav-center">
