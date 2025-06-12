@@ -19,9 +19,10 @@ export function renderHome() {
                 <input type="text" class="search-bar" placeholder="Search">
             </div>
             <div class="nav-right">
-                <a href="/login">
+                <div class="profile-container">
                     <img id="profile-icon" src="/src/assets/profile.png" alt="Profile" class="profile-icon">
-                </a>
+                    <div id="profile-dropdown" class="profile-dropdown hidden"></div>
+                </div>
             </div>
         </nav>
         <main class="content">
@@ -31,6 +32,36 @@ export function renderHome() {
             </section>
         </main>
     `;
+
+    const profileIcon = document.getElementById('profile-icon');
+    const dropdown = document.getElementById('profile-dropdown');
+
+    const token = localStorage.getItem('token');
+    dropdown.innerHTML = token ? `
+        <a href="/profile" data-route>Profile</a>
+        <a href="#" id="logout-button">Log out</a>
+    ` : `
+        <a href="/login" data-route>Login</a>
+        <a href="/signup" data-route>Create Account</a>
+    `;
+
+    profileIcon.addEventListener('click', () => {
+        dropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.profile-container')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    if (token) {
+        document.getElementById('logout-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            location.reload();
+        });
+    }
 
     loadCoptifyPlaylists();
 }
