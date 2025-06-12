@@ -4,9 +4,7 @@ let volumeSlider = null;
 let playButton = null;
 let progressLabel = null;
 let durationLabel = null;
-
 let isDragging = false;
-let isPlaying = false;
 
 const ICONS = {
     play: `
@@ -46,6 +44,7 @@ export function initPlayer() {
     audio = new Audio();
     audio.volume = 1.0;
 
+    // Media control handlers
     progressSlider = document.getElementById('progress');
     volumeSlider = document.getElementById('volume');
     playButton = document.getElementById('play-btn');
@@ -53,8 +52,8 @@ export function initPlayer() {
     durationLabel = document.getElementById('duration-label');
 
     // Button handlers
-    document.getElementById('prev-btn').addEventListener('click', () => audio.currentTime = 0); // Optional logic
-    document.getElementById('next-btn').addEventListener('click', () => audio.currentTime = audio.duration); // Optional logic
+    document.getElementById('prev-btn').addEventListener('click', () => audio.currentTime = 0);
+    document.getElementById('next-btn').addEventListener('click', () => audio.currentTime = audio.duration);
     playButton.addEventListener('click', togglePlay);
 
     // Volume control
@@ -73,14 +72,6 @@ export function initPlayer() {
         }
     });
 
-    audio.addEventListener('loadedmetadata', () => {
-        if (audio.duration) {
-            const mins = Math.floor(audio.duration / 60);
-            const secs = Math.floor(audio.duration % 60).toString().padStart(2, '0');
-            durationLabel.textContent = `${mins}:${secs}`;
-        }
-    });
-
     const scrubEnd = () => {
         if (audio.duration) {
             const time = (progressSlider.value / 100) * audio.duration;
@@ -88,6 +79,15 @@ export function initPlayer() {
         }
         isDragging = false;
     };
+
+    // Initialising duration label
+    audio.addEventListener('loadedmetadata', () => {
+        if (audio.duration) {
+            const mins = Math.floor(audio.duration / 60);
+            const secs = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+            durationLabel.textContent = `${mins}:${secs}`;
+        }
+    });
 
     progressSlider.addEventListener('mouseup', scrubEnd);
     progressSlider.addEventListener('touchend', scrubEnd);
@@ -103,7 +103,6 @@ export function initPlayer() {
 
     // Reset play button when song ends
     audio.addEventListener('ended', () => {
-        isPlaying = false;
         playButton.innerHTML = ICONS.play;
     });
 }
@@ -112,11 +111,9 @@ function togglePlay() {
     if (!audio.src) return;
     if (audio.paused) {
         audio.play();
-        isPlaying = true;
         playButton.innerHTML = ICONS.pause;
     } else {
         audio.pause();
-        isPlaying = false;
         playButton.innerHTML = ICONS.play;
     }
 }
@@ -133,6 +130,5 @@ export function loadSong(songID) {
     progressLabel.textContent = '0:00';
     durationLabel.textContent = '0:00';
     audio.play();
-    isPlaying = true;
     playButton.innerHTML = ICONS.pause;
 }
