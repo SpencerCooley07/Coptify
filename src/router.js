@@ -1,4 +1,5 @@
 import { renderHome } from './views/home.js';
+import { renderProfile } from './views/profile.js';
 import { renderLogin } from './views/login.js';
 import { renderSignup } from './views/signup.js';
 import { render404 } from './views/404.js';
@@ -7,6 +8,7 @@ import { renderPlaylist } from './views/playlist.js';
 const routes = [
     { path: /^\/$/, render: renderHome },
     { path: /^\/home$/, render: renderHome },
+    { path: /^\/profile$/, render: renderProfile },
     { path: /^\/signup$/, render: renderSignup },
     { path: /^\/login$/, render: renderLogin },
     { path: /^\/playlist\/([^/]+)$/, render: renderPlaylist },
