@@ -231,8 +231,6 @@ async function uploadProfile(file) {
 
             const result = await response.json();
 
-            location.reload();
-
         } catch (err) {
             alert('Could not upload image');
             console.error('Upload error:', err);
