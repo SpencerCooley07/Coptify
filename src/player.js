@@ -217,7 +217,10 @@ async function toggleLike(songID) {
             }
         });
         const json = await res.json();
-        if (!res.ok) return alert(json.message);
+        if (res.status == 401) {
+            // insert code to prompt login/signup
+            alert("Sign in to like songs!");
+        };
         likeStatus(songID);
     } catch (err) {
         console.error('Error toggling like:', err);
@@ -261,7 +264,6 @@ export function loadSong(songID) {
         document.getElementById('song-title').textContent = data.title || 'Unknown Title';
         document.getElementById('song-artist').textContent = data.artist || 'Unknown Artist';
         document.getElementById('song-cover').src = data.image || 'src/assets/playlist.png';
-        console.log(data.image)
     })
     .catch(err => {
         console.error('Metadata fetch error:', err);
