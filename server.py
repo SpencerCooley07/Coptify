@@ -1,15 +1,19 @@
 # SERVER + DB
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 import ssl, socket, secrets
 import mimetypes, json, os
 import sqlite3
 import subprocess
 
 # AUTH
-from datetime import datetime, timedelta
 import bcrypt, jwt
 
-class Coptify(BaseHTTPRequestHandler):
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+    daemon_threads = True
+
+class CoptifyRequestHandler(BaseHTTPRequestHandler):
     # CORS OPTIONS
     def do_OPTIONS(self):
         # Allow others to access the website
@@ -21,6 +25,9 @@ class Coptify(BaseHTTPRequestHandler):
 
     def do_GET(self):
         # Serve static content
+        connection = sqlite3.connect('coptify.sqlite')
+        cursor = connection.cursor()
+
         if not self.path.startswith('/api/'):
             if self.path.startswith('/src/'): file_path = self.path.lstrip('/')
             else: file_path = 'public/index.html'
@@ -131,14 +138,15 @@ class Coptify(BaseHTTPRequestHandler):
             elif playlistID: image_path = f"/src/assets/playlists/{playlistID[0]}.jpg"
             else: image_path = f"/src/assets/playlist.png"
 
-            print(image_path)
-
             self.sendJSON(200, {"title": songInfo[0], "artist": songInfo[1], "image": image_path})
             return
 
 
 
     def do_POST(self):
+        connection = sqlite3.connect('coptify.sqlite')
+        cursor = connection.cursor()
+
         contentLength = int(self.headers.get('Content-Length', 0))
         data = {}
 
@@ -220,9 +228,12 @@ class Coptify(BaseHTTPRequestHandler):
                 cursor.execute("INSERT INTO likes (username, songID) VALUES (?, ?)", (username, songID))
                 connection.commit()
                 self.sendJSON(200, {"message": "liked"})
+                return
             else:
                 cursor.execute(f"DELETE FROM likes WHERE username='{username}' AND songID = '{songID}'")
+                connection.commit()
                 self.sendJSON(200, {"message": "unliked"})
+                return
 
 
 
@@ -244,10 +255,6 @@ if __name__ == "__main__":
         with open('secret.key', 'r') as secret: SECRET_KEY = secret.read().strip()
     else: SECRET_KEY = secrets.token_hex(64)
 
-    # DB CONNECTION
-    connection = sqlite3.connect('coptify.sqlite')
-    cursor = connection.cursor()
-
     # SERVER
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
@@ -255,7 +262,8 @@ if __name__ == "__main__":
     s.close()
 
     SERVER_ADDRESS = (SERVER_IP if input('Bind to all? (Y/N) ').lower() == "n" else '0.0.0.0', 8443)
-    httpd = HTTPServer(SERVER_ADDRESS, Coptify)
+    httpd = ThreadingHTTPServer(SERVER_ADDRESS, CoptifyRequestHandler)
+
     # If HTTPS connection is available (certificates supplied) then hosts with HTTPS else HTTP
     if os.path.exists('ssl'):
         httpd.socket = ssl.wrap_socket(
@@ -264,8 +272,10 @@ if __name__ == "__main__":
             certfile='ssl/cert.pem',
             server_side=True
         )
-        server_access = f'https://{SERVER_IP}:{SERVER_ADDRESS[1]}'
-    else: server_access = f'http://{SERVER_IP}:{SERVER_ADDRESS[1]}'
+        protocol = 'https'
+    else: protocol = 'http'
+
+    server_access = f"{protocol}://{SERVER_IP}:{SERVER_ADDRESS[1]}"
 
     if input('Put server address in clipboard? (Y/N) ').lower() == "y":
         p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)

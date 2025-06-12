@@ -91,7 +91,8 @@ async function getPlaylistData(playlistID) {
         playlistTitle.textContent = info.name;
         playlistCurator.textContent = info.curator;
 
-        Object.entries(songs).forEach(([id, { name, artist }]) => {
+        Object.entries(songs).forEach(([id, { name, artist, position }]) => {
+            console.log(position, name, artist);
             playlistContent.insertAdjacentHTML('beforeend', `
                 <div class="playlist-item" data-id="${id}">
                     <div class="song-info">
