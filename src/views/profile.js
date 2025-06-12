@@ -2,6 +2,8 @@ import { allSongs } from "../app.js";
 import { fuzzySearchSongs } from "../utils.js";
 import { loadSong } from "../player.js";
 
+const allowedFileTypes = ['image/jpeg', 'image/png'];
+
 export function renderProfile() {
     const page = document.getElementById('page');
     page.innerHTML = `
@@ -35,7 +37,7 @@ export function renderProfile() {
                         <img src="/src/assets/profile.png" alt="Profile Picture" class="profile-page-pic">
                         <label class="edit-overlay">
                             <span>Edit</span>
-                            <input type="file" id="upload-profile-pic" class="file-input" accept="image/*">
+                            <input type="file" id="upload-profile-pic" class="file-input" accept="image/png, image/jpeg">
                         </label>
                     </div>
                     <h3 class="profile-name">${localStorage.getItem("username")}</h2>
@@ -92,12 +94,13 @@ export function renderProfile() {
 
     // Profile
     const profileIcon = document.getElementById('profile-icon');
+    const profilePagePicture = document.querySelector('.profile-page-pic');
     const profileDropdown = document.getElementById('profile-dropdown');
 
     const token = localStorage.getItem('token');
     profileDropdown.innerHTML = token ? `
         <a href="/profile" data-route>Profile</a>
-        <a href="#" id="logout-button">Log out</a>
+        <a href="/" id="logout-button">Log out</a>
     ` : `
         <a href="/login" data-route>Login</a>
         <a href="/signup" data-route>Create Account</a>
@@ -116,9 +119,25 @@ export function renderProfile() {
     });
 
     if (token) {
+        profileIcon.src = fetch('/api/getProfilePicture', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}`}
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch metadata');
+            return response.json();
+        })
+        .then(data => {
+            profileIcon.src = data.message;
+            profilePagePicture.src = data.message;
+        })
+        .catch(err => {
+            console.error('Profile could not be retrieved', err);
+        });
         document.getElementById('logout-button').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('token');
+            localStorage.removeItem('username');
             location.reload();
         });
     }
@@ -127,6 +146,7 @@ export function renderProfile() {
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        uploadProfile(file);
     });
 
     getLikedSongs();
@@ -171,4 +191,57 @@ async function getLikedSongs() {
         console.error(err);
         alert('Could not retrieve playlist data.');
     }
+}
+
+async function uploadProfile(file) {
+    const allowedFileTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!allowedFileTypes.includes(file.type)) {
+        alert('Unsupported file type');
+        return;
+    }
+
+    // Read image dimensions before upload
+    const imageURL = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = async () => {
+        const { width, height } = img;
+
+        if (width !== height) {
+            alert('Image must be square.');
+            return;
+        }
+
+        if (width > 2048 || height > 2048) {
+            alert('Image must be at most 1024x1024 pixels.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch('/api/uploadProfilePicture', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            location.reload();
+
+        } catch (err) {
+            alert('Could not upload image');
+            console.error('Upload error:', err);
+        }
+    };
+
+    img.onerror = () => {
+        alert('Failed to read image file.');
+    };
+
+    img.src = imageURL;
 }

@@ -2,7 +2,7 @@
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 import ssl, socket, secrets
-import mimetypes, json, os
+import mimetypes, json, cgi, os
 import sqlite3
 import subprocess
 
@@ -175,6 +175,29 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
                 }
             self.sendJSON(200, data)
 
+        if self.path == "/api/getProfilePicture":
+            authHeader = self.headers.get('Authorization')
+
+            if not authHeader or not authHeader.startswith("Bearer "):
+                self.sendJSON(401, {"message": "Missing or Invalid Authentication header"})
+                return
+
+            token = authHeader.split(' ')[1]
+
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                username = payload['sub']
+            except jwt.InvalidTokenError:
+                self.sendJSON(401, {"message": "Invalid token"})
+                return
+            
+            if os.path.exists(f'src/assets/profiles/{username}.png'):
+                self.sendJSON(200, {"message": f'/src/assets/profiles/{username}.png'})
+                return
+            else:
+                self.sendJSON(200, {"message": f'/src/assets/profile.png'})
+                return
+
 
 
     def do_POST(self):
@@ -182,9 +205,10 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
         cursor = connection.cursor()
 
         contentLength = int(self.headers.get('Content-Length', 0))
+        contentType = self.headers.get('Content-Type', '')
         data = {}
 
-        if contentLength > 0:
+        if contentLength > 0 and contentType.startswith("application/json"):
             raw = self.rfile.read(contentLength)
             try:
                 data = json.loads(raw.decode('utf-8'))
@@ -268,6 +292,52 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
                 connection.commit()
                 self.sendJSON(200, {"message": "unliked"})
                 return
+            
+        if self.path == '/api/uploadProfilePicture':
+            authHeader = self.headers.get('Authorization')
+
+            if not authHeader or not authHeader.startswith("Bearer "):
+                self.sendJSON(401, {"message": "Missing or Invalid Authentication header"})
+                return
+
+            token = authHeader.split(' ')[1]
+
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                username = payload['sub']
+            except jwt.InvalidTokenError:
+                self.sendJSON(401, {"message": "Invalid token"})
+                return
+
+
+            ctype, optDict = cgi.parse_header(self.headers.get('Content-Type'))
+            if ctype != 'multipart/form-data':
+                self.sendJSON(415, {"message": "Invalid content type"})
+                return
+
+            optDict['boundary'] = bytes(optDict['boundary'], "utf-8")
+            optDict['CONTENT-LENGTH'] = int(self.headers.get('Content-Length'))
+            form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={
+                'REQUEST_METHOD': 'POST',
+                'CONTENT_TYPE': self.headers.get('Content-Type'),
+            })
+
+            if 'image' not in form:
+                self.sendJSON(400, {"message":"No file uploaded"})
+                return
+
+            file = form['image']
+            if not file.file or not file.filename:
+                self.sendJSON(400, {"message": "Invalid file"})
+                return
+
+            file_ext = os.path.splitext(file.filename)[1].lower()
+            if file_ext not in ['.png', '.jpg', '.jpeg']:
+                self.sendJSON(415, {"message": "Unsupported content type"})
+                return
+
+            with open(f'src/assets/profiles/{username}.png', 'wb') as f: f.write(file.file.read())
+            self.sendJSON(200, {"message": "Upload successful"})
 
 
 

@@ -91,7 +91,7 @@ export function renderPlaylist(playlistID) {
     const token = localStorage.getItem('token');
     profileDropdown.innerHTML = token ? `
         <a href="/profile" data-route>Profile</a>
-        <a href="#" id="logout-button">Log out</a>
+        <a href="/" id="logout-button">Log out</a>
     ` : `
         <a href="/login" data-route>Login</a>
         <a href="/signup" data-route>Create Account</a>
@@ -110,9 +110,25 @@ export function renderPlaylist(playlistID) {
     });
 
     if (token) {
+        fetch('/api/getProfilePicture', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}`}
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch metadata');
+            return response.json();
+        })
+        .then(data => {
+            profileIcon.src = data.message;
+        })
+        .catch(err => {
+            console.error('Profile could not be retrieved', err);
+        });
+
         document.getElementById('logout-button').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('token');
+            localStorage.removeItem('username');
             location.reload();
         });
     }
