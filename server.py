@@ -99,18 +99,44 @@ class Coptify(BaseHTTPRequestHandler):
                 }
             self.sendJSON(200, data)
 
+        if self.path.startswith("/api/getLikeStatus/"):
+            authHeader = self.headers.get('Authorization')
+
+            if not authHeader or not authHeader.startswith("Bearer "):
+                self.sendJSON(401, {"message": "Missing or Invalid Authentication header"})
+                return
+            
+            token = authHeader.split(' ')[1]
+
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                username = payload['sub']
+            except jwt.InvalidTokenError:
+                self.sendJSON(401, {"message": "Invalid token"})
+                return
+            
+            songID = self.path.split('/')[-1]
+            if not cursor.execute(f"SELECT username, songID FROM likes WHERE username='{username}' AND songID = '{songID}'").fetchone():
+                self.sendJSON(200, {"message": "null"})
+                return
+            else:
+                self.sendJSON(200, {"message": "liked"})
+                return
+
 
 
     def do_POST(self):
-        # First gets the body of the POST method
         contentLength = int(self.headers.get('Content-Length', 0))
-        data = self.rfile.read(contentLength)
+        data = {}
 
-        try: data = json.loads(data.decode('utf-8'))
-        except json.JSONDecodeError:
-            self.sendJSON(400, {'message': 'Invalid JSON'})
-            return
-        
+        if contentLength > 0:
+            raw = self.rfile.read(contentLength)
+            try:
+                data = json.loads(raw.decode('utf-8'))
+            except json.JSONDecodeError:
+                self.sendJSON(400, {'message': 'Invalid JSON'})
+                return
+
         if self.path == '/api/signup':
             username, email, password = data.get('username'), data.get('email'), data.get('password')
 
@@ -130,9 +156,7 @@ class Coptify(BaseHTTPRequestHandler):
                 # Sends back a JWT token and adds user to DB
                 hashedPassword = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
                 token = jwt.encode({
-                    'sub': username,
-                    'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
-                    'iat': int(datetime.utcnow().timestamp())
+                    'sub': username
                 }, SECRET_KEY, 'HS256')
                 cursor.execute("INSERT INTO users (username, email, hashedPassword) VALUES (?, ?, ?)", (username, email, hashedPassword))
                 connection.commit()
@@ -158,11 +182,34 @@ class Coptify(BaseHTTPRequestHandler):
             
             # Sends back a JWT token for session management
             token = jwt.encode({
-                'sub': userData[0],
-                'exp': int((datetime.utcnow() + timedelta(hours=2)).timestamp()),
-                'iat': int(datetime.utcnow().timestamp())
+                'sub': userData[0]
             }, SECRET_KEY, 'HS256')
             self.sendJSON(201, {'message': 'Signed in', 'token': token, 'username': userData[0]})
+
+        if self.path.startswith("/api/toggleSongLike/"):
+            authHeader = self.headers.get('Authorization')
+
+            if not authHeader or not authHeader.startswith("Bearer "):
+                self.sendJSON(401, {"message": "Missing or Invalid Authentication header"})
+                return
+            
+            token = authHeader.split(' ')[1]
+
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                username = payload['sub']
+            except jwt.InvalidTokenError:
+                self.sendJSON(401, {"message": "Invalid token"})
+                return
+            
+            songID = self.path.split('/')[-1]
+            if not cursor.execute(f"SELECT username, songID FROM likes WHERE username='{username}' AND songID = '{songID}'").fetchone():
+                cursor.execute("INSERT INTO likes (username, songID) VALUES (?, ?)", (username, songID))
+                connection.commit()
+                self.sendJSON(200, {"message": "liked"})
+            else:
+                cursor.execute(f"DELETE FROM likes WHERE username='{username}' AND songID = '{songID}'")
+                self.sendJSON(200, {"message": "unliked"})
 
 
 
@@ -211,7 +258,7 @@ if __name__ == "__main__":
         p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
         p.stdin.write(server_access.encode())
         p.stdin.close()
-        os.system('clear')
+    os.system('clear')
 
     print(f'Server running on: {server_access}')
     httpd.serve_forever()

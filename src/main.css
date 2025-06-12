@@ -488,13 +488,12 @@ body {
     height: 36px;
     font-size: 18px;
     cursor: pointer;
-    color: var(--primary-fg);
-    transition: background 0.2s ease;
+    stroke: var(--primary-fg);
+    transition: stroke 0.2s ease;
 }
 
 .media-button:hover {
-    background: var(--accent);
-    color: var(--primary-bg);
+    stroke: var(--accent);
 }
 
 .slider-container {

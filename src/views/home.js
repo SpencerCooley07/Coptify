@@ -70,11 +70,8 @@ async function loadCoptifyPlaylists() {
     try {
         const response = await fetch('/api/getCoptifyPlaylists');
         const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.message);
-            return;
-        }
+        
+        if (!response.ok) return alert(data.message);
 
         Object.entries(data).forEach(([playlistID, { name, curator }]) => {
             const card = `
