@@ -69,6 +69,15 @@ export function initPlayer() {
                     <input type="range" id="volume" min="0" max="100" value="100" orient="vertical">
                 </div>
             </div>
+
+            <div id="song-meta">
+                <img id="song-cover" src="/src/assets/playlist.png" alt="Cover" />
+                <div class="song-text">
+                    <div id="song-title">No song</div>
+                    <div id="song-artist">No Artist</div>
+                </div>
+            </div>
+
         </div>
     `;
 
@@ -238,12 +247,33 @@ function updateLikeButton() {
 }
 
 export function loadSong(songID) {
+    likeStatus(songID);
     currentSongID = songID;
+
     audio.src = `/src/assets/songs/${songID}.mp3`;
+
+    fetch(`/api/getSongMetadata/${songID}`)
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch metadata');
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('song-title').textContent = data.title || 'Unknown Title';
+        document.getElementById('song-artist').textContent = data.artist || 'Unknown Artist';
+        document.getElementById('song-cover').src = data.image || 'src/assets/playlist.png';
+        console.log(data.image)
+    })
+    .catch(err => {
+        console.error('Metadata fetch error:', err);
+        document.getElementById('song-title').textContent = 'Unknown Title';
+        document.getElementById('song-artist').textContent = 'Unknown Artist';
+        document.getElementById('song-cover').src = 'src/assets/playlist.png';
+    });
+
     progressSlider.value = 0;
     progressLabel.textContent = '0:00';
     durationLabel.textContent = '0:00';
-    likeStatus(songID);
+
     audio.play();
     playButton.innerHTML = ICONS.pause;
 }

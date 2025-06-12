@@ -122,6 +122,19 @@ class Coptify(BaseHTTPRequestHandler):
             else:
                 self.sendJSON(200, {"message": "liked"})
                 return
+            
+        if self.path.startswith("/api/getSongMetadata/"):
+            songID = self.path.split('/')[-1]
+            songInfo = cursor.execute(f"SELECT name, artist FROM songs WHERE songID = '{songID}'").fetchone()
+            playlistID = cursor.execute(f"SELECT playlistID FROM playlistSongs WHERE songID = '{songID}'").fetchone()
+            if os.path.exists(f"/src/assets/songs/{songID}.png"): image_path = f"src/assets/songs/{songID}.png"
+            elif playlistID: image_path = f"/src/assets/playlists/{playlistID[0]}.jpg"
+            else: image_path = f"/src/assets/playlist.png"
+
+            print(image_path)
+
+            self.sendJSON(200, {"title": songInfo[0], "artist": songInfo[1], "image": image_path})
+            return
 
 
 
