@@ -20,3 +20,6 @@ Installing the requirements requires this code (using pip or pip3)
 
 After that, it should be all set. Simply run the python.server (using python or python3)
 `python3 server.py`
+
+Finally, binding to all takes longer but allows other computers on the same LAN to access it.
+There is also an option to copy the url to the clipboard.
