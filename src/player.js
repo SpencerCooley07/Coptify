@@ -233,7 +233,7 @@ async function likeStatus(songID) {
             }
         });
         const json = await res.json();
-        if (!res.ok) return alert(json.message);
+        if (!res.ok) return;
         isLiked = (json.message == "liked") ? true : false;
         updateLikeButton();
     } catch (err) {

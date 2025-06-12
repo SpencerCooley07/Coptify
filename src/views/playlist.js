@@ -1,3 +1,5 @@
+import { allSongs } from "../app.js";
+import { fuzzySearchSongs } from "../utils.js";
 import { loadSong } from "../player.js";
 
 export function renderPlaylist(playlistID) {
@@ -17,6 +19,7 @@ export function renderPlaylist(playlistID) {
             </div>
             <div class="nav-center">
                 <input type="text" class="search-bar" placeholder="Search">
+                <div id="search-dropdown" class="search-dropdown"></div>
             </div>
             <div class="nav-right">
                 <div class="profile-container">
@@ -37,11 +40,56 @@ export function renderPlaylist(playlistID) {
         </div>
     `;
 
+    // Search
+    const searchInput = document.querySelector('.search-bar');
+    const searchDropdown = document.getElementById('search-dropdown');
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        searchDropdown.innerHTML = '';
+
+        if (!query) {
+            searchDropdown.classList.add('hidden');
+            return;
+        }
+
+        const results = fuzzySearchSongs(allSongs, query).slice(0, 5);
+        
+        if (results.length === 0) {
+            searchDropdown.classList.add('hidden');
+            return;
+        }
+
+        results.forEach(songObj => {
+            const song = songObj.song;
+            const card = document.createElement('div');
+            card.className = 'search-item';
+            card.innerHTML = `
+                <div class="search-item-text" data-id=${song.id}>
+                    <strong>${song.name}</strong><br>
+                    <span>${song.artist}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => loadSong(song.id));
+            searchDropdown.appendChild(card);
+        });
+
+        searchDropdown.classList.remove('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('hidden');
+        }
+    });
+
+    // Profile
     const profileIcon = document.getElementById('profile-icon');
-    const dropdown = document.getElementById('profile-dropdown');
+    const profileDropdown = document.getElementById('profile-dropdown');
 
     const token = localStorage.getItem('token');
-    dropdown.innerHTML = token ? `
+    profileDropdown.innerHTML = token ? `
         <a href="/profile" data-route>Profile</a>
         <a href="#" id="logout-button">Log out</a>
     ` : `
@@ -50,12 +98,14 @@ export function renderPlaylist(playlistID) {
     `;
 
     profileIcon.addEventListener('click', () => {
-        dropdown.classList.toggle('hidden');
+        profileDropdown.classList.toggle('hidden');
     });
 
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.profile-container')) {
-            dropdown.classList.add('hidden');
+            profileDropdown.classList.add('hidden');
+        } else if (!e.target.closest('.search-dropdown')) {
+            searchDropdown.classList.add('hidden');
         }
     });
 
@@ -91,8 +141,7 @@ async function getPlaylistData(playlistID) {
         playlistTitle.textContent = info.name;
         playlistCurator.textContent = info.curator;
 
-        Object.entries(songs).forEach(([id, { name, artist, position }]) => {
-            console.log(position, name, artist);
+        Object.entries(songs).forEach(([id, { name, artist }]) => {
             playlistContent.insertAdjacentHTML('beforeend', `
                 <div class="playlist-item" data-id="${id}">
                     <div class="song-info">

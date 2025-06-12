@@ -140,6 +140,15 @@ class CoptifyRequestHandler(BaseHTTPRequestHandler):
 
             self.sendJSON(200, {"title": songInfo[0], "artist": songInfo[1], "image": image_path})
             return
+        
+        if self.path == "/api/getAllSongs":
+            songs = cursor.execute("SELECT songID, name, artist FROM songs ORDER BY name ASC").fetchall()
+            self.sendJSON(200, [{
+                "id": song[0],
+                "name": song[1],
+                "artist": song[2]
+            } for song in songs])
+            return
 
 
 
