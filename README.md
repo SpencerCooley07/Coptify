@@ -16,8 +16,8 @@ The songs for the Liturgies of St. Basil, St. Gregory, and St. Cyril that are up
 ![Profile Page](showcase/liked.png)
 
 # Using Coptify
-First, you will need to clone this repository which will take some time due to the large size of the demo songs  
-`git clone https://github.com/SpencerCooley07/Coptify.git`
+First, you will need to clone this repository in the desired directory which will take some time due to the large size of the demo songs  
+`git clone https://github.com/spencerjcooley/Coptify.git`
 
 Next, you must cd into the "Coptify" folder  
 `cd Coptify`
